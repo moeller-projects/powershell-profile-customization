@@ -16,7 +16,7 @@ function Update-Script {
         $scriptContent = Invoke-RestMethod -Uri $repoURL -UseBasicParsing
         if ($scriptContent) {
             Write-Host "$($PSStyle.Foreground.Yellow)Update found! Applying update...$($PSStyle.Reset)"
-            $scriptPath = $MyInvocation.MyCommand.Path
+            $scriptPath = $Script:MyInvocation.MyCommand.Path
             $scriptContent | Set-Content -Path $scriptPath -Force
 
             # Save update timestamp
