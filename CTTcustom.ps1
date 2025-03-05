@@ -1,8 +1,6 @@
 # CTTCustom.ps1 - Self-Updating PowerShell Script
 # Version: 1.0.0
 
-$debug = $false
-
 $repoURL = "https://raw.githubusercontent.com/moeller-projects/powershell-profile-customization/main/CTTcustom.ps1"
 $timeFilePath = Join-Path -Path $env:USERPROFILE -ChildPath "Documents\PowerShell\LastCustomizationUpdate.txt"
 
@@ -10,27 +8,32 @@ $timeFilePath = Join-Path -Path $env:USERPROFILE -ChildPath "Documents\PowerShel
 $updateInterval = 7
 
 function Update-Script {
-    Write-Host "$($PSStyle.Foreground.Cyan)Checking for updates...$($PSStyle.Reset)"
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param()
 
-    try {
-        $scriptContent = Invoke-RestMethod -Uri $repoURL -UseBasicParsing
-        if ($scriptContent) {
-            Write-Host "$($PSStyle.Foreground.Yellow)Update found! Applying update...$($PSStyle.Reset)"
-            $scriptPath = $Script:MyInvocation.MyCommand.Path
-            $scriptContent | Set-Content -Path $scriptPath -Force
+    if ($PSCmdlet.ShouldProcess("Updating script at $scriptPath")) {
+        Write-Verbose "Checking for updates..."
 
-            # Save update timestamp
-            Get-Date | Set-Content -Path $timeFilePath -Force
-            Write-Host "$($PSStyle.Foreground.Green)Update applied. Please restart your session.$($PSStyle.Reset)"
-            exit
+        try {
+            $scriptContent = Invoke-RestMethod -Uri $repoURL -UseBasicParsing
+            if ($scriptContent) {
+                Write-Verbose "Update found! Applying update..."
+                $scriptPath = $Script:MyInvocation.MyCommand.Path
+                $scriptContent | Set-Content -Path $scriptPath -Force
+
+                # Save update timestamp
+                Get-Date | Set-Content -Path $timeFilePath -Force
+                Write-Output "Update applied. Please restart your session."
+                exit
+            }
         }
-    }
-    catch {
-        Write-Host "$($PSStyle.Foreground.Red)Failed to update script: $_$($PSStyle.Reset)"
+        catch {
+            Write-Error "Failed to update script: $_"
+        }
     }
 }
 
-function Should-Update {
+function Test-UpdateNeeded {
     if (-Not (Test-Path $timeFilePath)) { return $true }
 
     $lastUpdate = Get-Content $timeFilePath | Get-Date
@@ -39,9 +42,6 @@ function Should-Update {
     return $daysSinceLastUpdate -ge $updateInterval
 }
 
-if ($updateInterval -eq -1 -or (Should-Update)) {
+if ($updateInterval -eq -1 -or (Test-UpdateNeeded)) {
     Update-Script
-}
-else {
-    Write-Host "$($PSStyle.Foreground.Green)Script is up to date.$($PSStyle.Reset)"
 }
