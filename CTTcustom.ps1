@@ -7,7 +7,7 @@ $timeFilePath = Join-Path -Path $env:USERPROFILE -ChildPath "Documents\PowerShel
 # Update interval in days (Set to -1 for always update)
 $updateInterval = 7
 
-function Update-Script {
+function Update-CustomizationScript {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param()
 
@@ -43,5 +43,5 @@ function Test-UpdateNeeded {
 }
 
 if ($updateInterval -eq -1 -or (Test-UpdateNeeded)) {
-    Update-Script
+    Update-CustomizationScript
 }
